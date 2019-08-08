@@ -35,20 +35,9 @@
     "mapbender/digitizer": "<1.1.67"
   },
   "config": {
-    "bin-dir": "bin",
-    "component-dir": "web/assets"
+    "bin-dir": "bin"
   },
   "extra": {
-    "component": {
-      "scripts": [
-        "src/js/utils/*.js",
-        "src/js/elements/*.js",
-        "src/js/jquery.form.generator.js"
-      ],
-      "styles": [
-        "src/styles/base.css"
-      ]
-    },
     "branch-alias": {
 	"dev-master": "0.0.x-dev"
     }
