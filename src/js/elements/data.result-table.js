@@ -11,7 +11,7 @@
      columns:      [{data: 'id', title: 'ID'}, {data: 'label', title: 'Title'}],
      data:         [{id: 1, label: 'example'}]
      */
-    $.widget("vis-ui-js.resultTable", {
+    $.widget("vis-ui-js.resultTableBase", {
 
         _table:     null,
         _dataTable: null,
@@ -183,10 +183,10 @@
         getApi: function() {
             return this._dataTable;
         },
-        
+
         /**
          * Get widget itself
-         * 
+         *
          * @returns widget
          */
         getWidget: function(){
@@ -413,16 +413,16 @@
             });
             return r;
         },
-        
+
         /**
-         * 
+         *
          * @param {type} id
          * @param {type} key
          * @returns {@exp;selector|@exp;seed@pro;length|@exp;selector@call;slice|String|@exp;compiled@pro;selector|@exp;selector@call;replace|@exp;handleObjIn@pro;selector|until|seed.length|compiled.selector|handleObjIn.selector|@exp;type|@exp;type@call;slice|@exp;callback|@exp;props|@exp;params|@arr;@this;|@exp;data|@exp;speed|@exp;options|Array|@exp;props@call;split|@exp;jQuery@call;param|@exp;query@call;split|@exp;jQuery@call;makeArray|@exp;selectorundefined|@exp;options@pro;duration|@exp;_@call;extend|options|@exp;s@call;join@call;replace|selectorundefined|_@call;extend.duration|options.duration}Get data by id
          */
-        getDataById: function(value, key){    
+        getDataById: function(value, key){
             var result;
-            
+
             if(!key){
                 key = 'id'
             }
@@ -448,7 +448,7 @@
 
             return result ? $(result) : result;
         },
-        
+
         /**
          * Show by DOM row
          * @return int page number
@@ -460,7 +460,7 @@
             if(domRow.hasOwnProperty('length')){
                 domRow = domRow[0]
             }
-            
+
             var nodePosition = tableApi.rows({order: 'current'}).nodes().indexOf(domRow);
             var pageNumber = Math.floor(nodePosition / rowsOnOnePage);
             tableApi.page(pageNumber).draw( false );
@@ -508,6 +508,163 @@
                 return this;
             }
         }
+    });
+
+    $.widget("vis-ui-js.resultTable", $["vis-ui-js"].resultTableBase, {
+
+        addRow: function (feature) {
+            var resultTable = this;
+            var tableApi = resultTable.getApi();
+
+            var row = resultTable.getTableRowByFeature(feature);
+            if (!row) {
+                tableApi.row.add(feature);
+                tableApi.draw();
+
+            }
+
+        },
+
+        deleteRows: function (condition) {
+            var resultTable = this;
+            var tableApi = resultTable.getApi();
+
+            var rows = tableApi.rows(condition);
+
+            rows.remove().draw();
+        },
+
+
+        initializeResultTableEvents: function () {
+            var resultTable = this;
+
+            var tableApi = resultTable.getApi();
+
+            var table = resultTable.element;
+
+            table.off('mouseenter', 'mouseleave', 'click');
+
+            table.delegate("tbody > tr", 'mouseenter', function () {
+                var tr = this;
+                var row = tableApi.row(tr);
+                var feature = row.data();
+                if (feature) {
+                    feature.dispatchEvent({type: 'Digitizer.HoverFeature', hover: true});
+                }
+
+            });
+
+            table.delegate("tbody > tr", 'mouseleave', function () {
+                var tr = this;
+                var row = tableApi.row(tr);
+                var feature = row.data();
+
+                if (feature) {
+                    feature.dispatchEvent({type: 'Digitizer.HoverFeature', hover: false});
+                }
+            });
+
+        },
+
+        hoverInResultTable: function (feature, highlight) {
+            var resultTable = this;
+
+            var domRow = resultTable.getDomRowByData(feature);
+            if (domRow && domRow.size()) {
+                resultTable.showByRow(domRow);
+
+                if (highlight) {
+                    domRow.addClass('hover');
+                } else {
+                    domRow.removeClass('hover');
+                }
+
+            }
+
+        },
+
+
+        redrawResultTableFeatures: function (features) {
+            var resultTable = this;
+            var tableApi = resultTable.getApi();
+
+            tableApi.clear();
+
+            tableApi.rows.add(features);
+            tableApi.draw();
+
+        },
+
+
+        getTableRowByFeature: function (feature) {
+            var resultTable = this;
+            var row = resultTable.getDomRowByData(feature);
+            return row;
+        },
+
+
+        refreshFeatureRowInDataTable: function (feature) {
+            var resultTable = this;
+            var tableApi = resultTable.getApi();
+
+            var row = tableApi.row(resultTable.getDomRowByData(feature));
+            row.invalidate();
+            tableApi.draw();
+        },
+
+        initializeColumnTitles: function () {
+            var resultTable = this;
+
+            var searchableColumnTitles = _.pluck(_.reject(resultTable.options.columns, function (column) {
+                if (!column.sTitle) {
+                    return true;
+                }
+
+                if (column.hasOwnProperty('searchable') && column.searchable === false) {
+                    return true;
+                }
+            }), 'sTitle');
+
+            resultTable.element.find(".dataTables_filter input[type='search']").attr('placeholder', searchableColumnTitles.join(', '));
+        },
+
+
+// Allow Button disable
+        genNavigation: function (elements) {
+            var html = $('<div class="button-navigation"/>');
+
+            $.each(elements, function (idx, element) {
+
+                var type = 'button';
+                if (_.has(element, 'type')) {
+                    type = element.type;
+                } else if (_.has(element, 'html')) {
+                    type = 'html';
+                }
+
+                switch (type) {
+                    case 'html':
+                        html.append(element.html);
+                        break;
+                    case 'button':
+                        var title = element.title ? element.title : (element.text ? element.text : '');
+                        var disabled = !!element.disabled ? 'disabled' : '';
+                        var button = $('<button class="button" ' + disabled + ' title="' + title + '">' + title + '</button>');
+                        if (_.has(element, 'cssClass')) {
+                            button.addClass(element.cssClass);
+                        }
+                        if (_.has(element, 'className')) {
+                            button.addClass("icon-" + element.className);
+                            button.addClass(element.className);
+                        }
+
+                        html.append(button);
+                        break;
+                }
+            });
+            return html;
+        },
+
     });
 
 })(jQuery);
