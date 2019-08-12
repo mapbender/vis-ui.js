@@ -525,6 +525,18 @@
 
         },
 
+
+        deleteRow: function (feature) {
+            var resultTable = this;
+            var tableApi = resultTable.getApi();
+
+            var rows = tableApi.rows(function (idx, _feature, row) {
+                return _feature == feature;
+            });
+
+            rows.remove().draw();
+        },
+
         deleteRows: function (condition) {
             var resultTable = this;
             var tableApi = resultTable.getApi();
