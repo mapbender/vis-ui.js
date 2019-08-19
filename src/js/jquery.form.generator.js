@@ -580,6 +580,7 @@
                 return inputHolder;
             },
             colorPicker: function (item, declarations, widget) {
+
                 var container = $('<div class="form-group"/>');
                 var inputHolder = declarations.input(item, declarations, widget);
                 var label = inputHolder.find('> label');
