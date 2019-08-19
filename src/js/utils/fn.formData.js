@@ -109,7 +109,14 @@ $.fn.formData = function(values) {
         });
         return form;
     } else {
+        var defectiveInputs = [];
         values = {};
+        Object.defineProperty(values,"defectiveInputs",{
+            value: function() {
+                return defectiveInputs;
+            },
+            writable: false,
+        });
         var firstInput;
         $.each(inputs, function() {
             var input = $(this);
@@ -152,6 +159,7 @@ $.fn.formData = function(values) {
                     if(!isDataReady && !firstInput && input.is(":visible")){
                         firstInput = input;
                         input.focus();
+                        defectiveInputs.push(input);
                     }
                 }
                 values[this.name] = value;
