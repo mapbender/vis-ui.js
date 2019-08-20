@@ -136,7 +136,7 @@ $.fn.formData = function(values) {
                     value = input.is(':checked') ? input.val() : null;
                     break;
                 case 'select-multiple' :
-                    value = input.val().join(",");
+                    value = (Array.isArray(input.val()) && input.val().join(",")) || '';
                     break;
                 default:
                     value = input.val();
