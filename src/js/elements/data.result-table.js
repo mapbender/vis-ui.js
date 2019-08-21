@@ -547,37 +547,6 @@
         },
 
 
-        initializeResultTableEvents: function () {
-            var resultTable = this;
-
-            var tableApi = resultTable.getApi();
-
-            var table = resultTable.element;
-
-            table.off('mouseenter', 'mouseleave', 'click');
-
-            table.delegate("tbody > tr", 'mouseenter', function () {
-                var tr = this;
-                var row = tableApi.row(tr);
-                var feature = row.data();
-                if (feature) {
-                    feature.dispatchEvent({type: 'Digitizer.HoverFeature', hover: true});
-                }
-
-            });
-
-            table.delegate("tbody > tr", 'mouseleave', function () {
-                var tr = this;
-                var row = tableApi.row(tr);
-                var feature = row.data();
-
-                if (feature) {
-                    feature.dispatchEvent({type: 'Digitizer.HoverFeature', hover: false});
-                }
-            });
-
-        },
-
         hoverInResultTable: function (feature, highlight) {
             var resultTable = this;
 
