@@ -518,7 +518,7 @@
 
             var row = resultTable.getTableRowByFeature(feature);
             if (!row) {
-                tableApi.row.add(feature);
+                tableApi.row.add(feature).draw();
                 tableApi.draw();
 
             }
@@ -530,6 +530,7 @@
             var resultTable = this;
             var tableApi = resultTable.getApi();
 
+            //var row = resultTable.getTableRowByFeature(feature);
             var rows = tableApi.rows(function (idx, _feature, row) {
                 return _feature == feature;
             });
@@ -546,6 +547,12 @@
             rows.remove().draw();
         },
 
+        getButtonByFeature: function(clazz, feature) {
+            var resultTable = this;
+            var row = resultTable.getTableRowByFeature(feature);
+
+            return row ? row.find(".button-navigation").find(clazz) : null;
+        },
 
         hoverInResultTable: function (feature, highlight) {
             var resultTable = this;
