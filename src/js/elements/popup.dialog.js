@@ -18,12 +18,27 @@
         // track if window is opened
         isOpened: false,
 
+
+
+        /** Cancel is called when popup closes without being saved before
+         *
+         * @param event
+         * @return void
+         *
+         * */
+
+        cancel: function(event) {
+          this._trigger("cancel",event);
+          this.close(event);
+        },
+
         /**
          * Constructor, runs only if the object wasn't created before
          *
          * @return {*}
          * @private
          */
+
         _create: function() {
             var element = $(this.element);
             var widget = this;
@@ -64,6 +79,15 @@
             });
 
             var result = this._super();
+
+            // Removing standard call of 'close' and replace it with 'cancel'
+            this._off(this.uiDialogTitlebarClose,'click');
+            this._on(this.uiDialogTitlebarClose, {
+                click: function(event) {
+                    event.preventDefault();
+                    this.cancel(event);
+                }
+            });
 
             // fake dialogExtend check for ui-dialog
             element.data("ui-dialog",true);

@@ -550,7 +550,6 @@
         getButtonByFeature: function(clazz, feature) {
             var resultTable = this;
             var row = resultTable.getTableRowByFeature(feature);
-
             return row ? row.find(".button-navigation").find(clazz) : null;
         },
 
