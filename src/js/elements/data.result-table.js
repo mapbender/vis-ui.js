@@ -519,19 +519,13 @@
             resultTable.getApi().draw();
         },
 
-        addRow: function (feature) {
+        addRow: function(feature) {
             var resultTable = this;
             var tableApi = resultTable.getApi();
 
-            var row = resultTable.getTableRowByFeature(feature);
-            if (!row) {
-                tableApi.row.add(feature).draw();
-                tableApi.draw();
-
-            }
-
+            tableApi.row.add(feature);
+            tableApi.draw();
         },
-
 
         deleteRow: function (feature) {
             var resultTable = this;
