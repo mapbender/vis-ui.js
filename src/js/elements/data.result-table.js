@@ -1,4 +1,4 @@
-(function($) {
+(function ($) {
     /**
      * Mapbender result table element.
      * Uses DataTables API
@@ -13,7 +13,7 @@
      */
     $.widget("vis-ui-js.resultTableBase", {
 
-        _table:     null,
+        _table: null,
         _dataTable: null,
         _selection: null,
 
@@ -22,7 +22,7 @@
          *
          * @private
          */
-        _create: function() {
+        _create: function () {
             var widget = this;
             var el = $(widget.element);
             var table = widget._table = $('<table class="table table-striped table-hover"></table>');
@@ -35,42 +35,42 @@
             el.append(table);
             el.addClass('mapbender-element-result-table');
 
-            if(isSelectable) {
+            if (isSelectable) {
                 widget._addSelection();
             }
 
-            if(hasRowButtons) {
+            if (hasRowButtons) {
                 widget._addButtons(options.buttons);
             }
             var dataTable = widget._dataTable = table.DataTable($.extend({
                 "oLanguage": {
                     sEmptyTable: "0 / 0",
-                    sInfo:      "_START_ / _END_ (_TOTAL_)",
+                    sInfo: "_START_ / _END_ (_TOTAL_)",
                     "oPaginate": {
-                        "sSearch":   "Filter:",
-                        "sNext":     "Weiter",
+                        "sSearch": "Filter:",
+                        "sNext": "Weiter",
                         "sPrevious": "Zurück"
                     }
                 }
-            },options));
+            }, options));
 
             dataTableContainer = table.closest('.dataTables_wrapper');
             dataTableContainer.find('.dataTables_paginate a').addClass('button');
 
-            if(isSelectable) {
+            if (isSelectable) {
 
                 var selectionManager = widget.getSelection();
 
-                dataTable.on('page', function() {
+                dataTable.on('page', function () {
 
-                    $.each(dataTable.$('tr'), function() {
+                    $.each(dataTable.$('tr'), function () {
                         var tr = this;
                         var rowData = widget.getDataByRow(tr);
                         var foundData = null;
 
-                        $.each(selectionManager.list,function(){
+                        $.each(selectionManager.list, function () {
                             var selectedData = this;
-                            if(rowData == selectedData){
+                            if (rowData == selectedData) {
                                 foundData = selectedData;
                                 return false;
                             }
@@ -79,39 +79,39 @@
                         var $tr = $(tr);
                         var checkbox = $('td.selection input[type=checkbox]', $tr);
 
-                        if(foundData) {
+                        if (foundData) {
                             checkbox.prop('checked', true);
                             $tr.addClass('warning');
-                        }else{
+                        } else {
                             checkbox.prop('checked', false);
                             $tr.removeClass('warning');
                         }
                     });
                 });
 
-                selectionManager.on('add', function(data) {
+                selectionManager.on('add', function (data) {
                     var tr = widget.getRowByData(data);
-                    if(!tr){
+                    if (!tr) {
                         return;
                     }
                     var checkbox = $('td.selection input[type=checkbox]', tr);
                     checkbox.prop('checked', true);
                     tr.addClass('warning');
-                }).on('remove', function(data) {
+                }).on('remove', function (data) {
                     var tr = widget.getRowByData(data);
-                    if(!tr){
+                    if (!tr) {
                         return;
                     }
                     $('td.selection input[type=checkbox]', tr).prop('checked', false);
                     tr.removeClass('warning');
                 });
 
-                $(table).delegate("tbody>tr[role='row']", 'click', function(e) {
+                $(table).delegate("tbody>tr[role='row']", 'click', function (e) {
                     var tr = $(this);
                     var isSelected = !tr.hasClass('warning');
                     var data = dataTable.row(this).data();
 
-                    if(isSelected) {
+                    if (isSelected) {
                         selectionManager.add(data);
                     } else {
                         selectionManager.remove(data);
@@ -119,54 +119,54 @@
                 });
             }
 
-            if(hasRowButtons) {
-                $.each(options.buttons, function(idx, button) {
-                    if(!button.hasOwnProperty('onClick') && !button.hasOwnProperty('click'))
+            if (hasRowButtons) {
+                $.each(options.buttons, function (idx, button) {
+                    if (!button.hasOwnProperty('onClick') && !button.hasOwnProperty('click'))
                         return;
 
-                    $(table).delegate("tbody>tr[role='row'] button." + button.className, 'click', function(e) {
+                    $(table).delegate("tbody>tr[role='row'] button." + button.className, 'click', function (e) {
                         var $button = $(this);
                         var data = dataTable.row($button.closest('tr')[0]).data();
                         e.stopPropagation();
-                        if(button.click && typeof button.click == "function"){
+                        if (button.click && typeof button.click == "function") {
                             $button.data("item", data);
                             $.proxy(button.click, $button)(e);
-                        }else{
+                        } else {
                             button.onClick(data, $button, e);
                         }
                     });
                 });
             }
 
-            if(hasBottomNavigation) {
+            if (hasBottomNavigation) {
                 this.addBottomNavigation(options.bottomNavigation);
             }
         },
 
-        genNavigation: function(elements) {
+        genNavigation: function (elements) {
             var html = $('<div class="button-navigation"/>');
-            $.each(elements, function(idx, element) {
+            $.each(elements, function (idx, element) {
 
                 var type = 'button';
-                if(_.has(element,'type')){
+                if (_.has(element, 'type')) {
                     type = element.type;
-                }else if(_.has(element,'html')){
+                } else if (_.has(element, 'html')) {
                     type = 'html';
                 }
 
-                switch(type){
+                switch (type) {
                     case 'html':
                         html.append(element.html);
                         break;
                     case 'button':
-                        var title = element.title?element.title:(element.text?element.text:'');
+                        var title = element.title ? element.title : (element.text ? element.text : '');
                         var button = $('<button class="button" title="' + title + '">' + title + '</button>');
-                        if(_.has(element,'cssClass')){
-                             button.addClass(element.cssClass);
+                        if (_.has(element, 'cssClass')) {
+                            button.addClass(element.cssClass);
                         }
-                        if(_.has(element,'className')){
-                            button.addClass("icon-"+element.className);
-                            button.addClass( element.className);
+                        if (_.has(element, 'className')) {
+                            button.addClass("icon-" + element.className);
+                            button.addClass(element.className);
                         }
 
                         html.append(button);
@@ -180,7 +180,7 @@
          * Get DataTables API
          * @see http://datatables.net/reference/api/
          */
-        getApi: function() {
+        getApi: function () {
             return this._dataTable;
         },
 
@@ -189,17 +189,17 @@
          *
          * @returns widget
          */
-        getWidget: function(){
+        getWidget: function () {
             return this;
         },
 
         /**
          * Get selection manager
          */
-        getSelection: function() {
+        getSelection: function () {
             var widget = this;
-            if(!widget._selection) {
-                widget._selection = $.extend(true, new function() {
+            if (!widget._selection) {
+                widget._selection = $.extend(true, new function () {
                     var me = this;
                     var list = me.list = [];
                     this.table = widget._table;
@@ -209,8 +209,8 @@
                      *
                      * @param data
                      */
-                    me.add = function(data) {
-                        if(_.indexOf(list,data) != -1){
+                    me.add = function (data) {
+                        if (_.indexOf(list, data) != -1) {
                             return this;
                         }
                         list.push(data);
@@ -224,8 +224,8 @@
                      * @param data
                      * @return {boolean}
                      */
-                    me.remove = function(data) {
-                        if(_.indexOf(list, data) == -1) {
+                    me.remove = function (data) {
+                        if (_.indexOf(list, data) == -1) {
                             return this;
                         }
                         list.splice(_.indexOf(list, data), 1);
@@ -245,7 +245,7 @@
          * @param value
          * @private
          */
-        _setOption: function(key, value) {
+        _setOption: function (key, value) {
             switch (key) {
                 case "data":
                     this.setData(value);
@@ -257,28 +257,28 @@
          *
          * @param data
          */
-        setData: function(data) {
+        setData: function (data) {
             var options = $.extend(this.options, {aaData: data});
             this.options.data = data;
             this._dataTable.destroy();
             this._dataTable = $(this._table).DataTable(options);
         },
 
-        _addSelection: function() {
+        _addSelection: function () {
             var options = this.options;
             var columns = options.columns;
 
             options.columns = _.union([{
-                data:  null,
+                data: null,
                 title: ''
             }], columns);
 
             var columnDef = [{
-                targets:        0,
-                className:      'selection',
-                width:          "1%",
-                orderable:      false,
-                searchable:     false,
+                targets: 0,
+                className: 'selection',
+                width: "1%",
+                orderable: false,
+                searchable: false,
                 defaultContent: '<input type="checkbox" value="1"/>'
             }];
 
@@ -286,20 +286,20 @@
             options.columnDefs = options.hasOwnProperty('columnDefs') ? _.flatten(options.columnDefs, columnDef) : columnDef;
         },
 
-        _addButtons: function(buttons) {
+        _addButtons: function (buttons) {
             var options = this.options;
 
             options.columns.push({
-                data:  null,
+                data: null,
                 title: ''
             });
 
             var columnDef = [{
-                targets:        -1,
-                className:      'buttons',
-                width:          "1%",
-                orderable:      false,
-                searchable:     false,
+                targets: -1,
+                className: 'buttons',
+                width: "1%",
+                orderable: false,
+                searchable: false,
                 defaultContent: $('<div>').append(this.genNavigation(options.buttons).clone()).html()
             }];
 
@@ -312,22 +312,22 @@
          * @param buttons
          * @return {*}
          */
-        addBottomNavigation: function(buttons) {
+        addBottomNavigation: function (buttons) {
             var widget = this;
             var el = $(widget.element);
             var options = widget.options;
             var navigation = widget.genNavigation(buttons).addClass('bottom-navigation');
 
-            $('button', navigation).on('click', function(event) {
+            $('button', navigation).on('click', function (event) {
                 var button = $(event.currentTarget);
                 // find and run callback, if defined in configuration
-                $.each(options.bottomNavigation, function(idx, config) {
-                    if(button.hasClass(config.className) && config.hasOwnProperty('onClick')) {
+                $.each(options.bottomNavigation, function (idx, config) {
+                    if (button.hasClass(config.className) && config.hasOwnProperty('onClick')) {
                         config.onClick($.extend(event, {
-                            widget:    widget,
+                            widget: widget,
                             dataTable: widget._dataTable,
-                            table:     widget._table,
-                            config:    config
+                            table: widget._table,
+                            config: config
                         }));
                     }
                 });
@@ -338,11 +338,11 @@
             return navigation;
         },
 
-        getRowByData: function(data) {
+        getRowByData: function (data) {
             var widget = this;
             var r = null;
-            $.each(widget.getVisibleRows(), function() {
-                if(widget.getDataByRow(this) == data) {
+            $.each(widget.getVisibleRows(), function () {
+                if (widget.getDataByRow(this) == data) {
                     r = $(this);
                     return false;
                 }
@@ -350,63 +350,63 @@
             return r;
         },
 
-        getVisibleRows: function() {
+        getVisibleRows: function () {
             return $(">tbody>tr[role='row']", this._table);
         },
 
-        getVisibleRowData: function() {
+        getVisibleRowData: function () {
             var list = [];
             var widget = this;
 
-            $.each(widget.getVisibleRows(), function() {
+            $.each(widget.getVisibleRows(), function () {
                 list.push(widget.getDataByRow(this));
             });
 
             return list;
         },
 
-        getDataByRow: function(tr) {
+        getDataByRow: function (tr) {
             return this._dataTable.row(tr).data();
         },
 
-        selectVisibleRows: function() {
+        selectVisibleRows: function () {
             var widget = this;
             var selectionManager = widget.getSelection();
-            $.each(widget.getVisibleRows(), function() {
+            $.each(widget.getVisibleRows(), function () {
                 selectionManager.add(widget.getDataByRow(this));
             });
         },
 
         // TODO: realize
-        selectAll: function() {
+        selectAll: function () {
             var widget = this;
             var selectionManager = widget.getSelection();
-            $.each(widget._dataTable.data(), function() {
+            $.each(widget._dataTable.data(), function () {
                 selectionManager.add(this);
             });
         },
 
-        deselectVisibleRows: function() {
+        deselectVisibleRows: function () {
             var widget = this;
             var selectionManager = widget.getSelection();
-            $.each(widget.getVisibleRows(), function() {
+            $.each(widget.getVisibleRows(), function () {
                 selectionManager.remove(widget.getDataByRow(this));
             });
         },
 
         // TODO: realize
-        deselectAll: function() {
+        deselectAll: function () {
             var widget = this;
             var selectionManager = widget.getSelection();
-            $.each(widget._dataTable.data(), function() {
+            $.each(widget._dataTable.data(), function () {
                 selectionManager.remove(this);
             });
         },
 
-        hasUnselectedVisibleRows: function() {
+        hasUnselectedVisibleRows: function () {
             var r = false;
-            $.each(this.getVisibleRows(),function(){
-                if(!$(this).hasClass('warning')){
+            $.each(this.getVisibleRows(), function () {
+                if (!$(this).hasClass('warning')) {
                     r = true;
                     return false;
                 }
@@ -420,14 +420,14 @@
          * @param {type} key
          * @returns {@exp;selector|@exp;seed@pro;length|@exp;selector@call;slice|String|@exp;compiled@pro;selector|@exp;selector@call;replace|@exp;handleObjIn@pro;selector|until|seed.length|compiled.selector|handleObjIn.selector|@exp;type|@exp;type@call;slice|@exp;callback|@exp;props|@exp;params|@arr;@this;|@exp;data|@exp;speed|@exp;options|Array|@exp;props@call;split|@exp;jQuery@call;param|@exp;query@call;split|@exp;jQuery@call;makeArray|@exp;selectorundefined|@exp;options@pro;duration|@exp;_@call;extend|options|@exp;s@call;join@call;replace|selectorundefined|_@call;extend.duration|options.duration}Get data by id
          */
-        getDataById: function(value, key){
+        getDataById: function (value, key) {
             var result;
 
-            if(!key){
+            if (!key) {
                 key = 'id'
             }
-            $.each(this.getApi().data(),function(i, data){
-                if(value === data[key]){
+            $.each(this.getApi().data(), function (i, data) {
+                if (value === data[key]) {
                     result = data;
                     return false
                 }
@@ -440,9 +440,9 @@
          * @param {type} DOM object
          * @returns {undefined}
          */
-        getDomRowByData: function(data) {
+        getDomRowByData: function (data) {
             var tableApi = this.getApi();
-            var result = _.first(tableApi.rows(function(idx, _data, row) {
+            var result = _.first(tableApi.rows(function (idx, _data, row) {
                 return _data == data
             }).nodes());
 
@@ -453,56 +453,56 @@
          * Show by DOM row
          * @return int page number
          */
-        showByRow: function(domRow){
-            var tableApi =  this._dataTable;
+        showByRow: function (domRow) {
+            var tableApi = this._dataTable;
             var rowsOnOnePage = tableApi.page.len();
 
-            if(domRow.hasOwnProperty('length')){
+            if (domRow.hasOwnProperty('length')) {
                 domRow = domRow[0]
             }
 
             var nodePosition = tableApi.rows({order: 'current'}).nodes().indexOf(domRow);
             var pageNumber = Math.floor(nodePosition / rowsOnOnePage);
-            tableApi.page(pageNumber).draw( false );
+            tableApi.page(pageNumber).draw(false);
             return pageNumber;
         },
         _eventDispatcher: {
             _listeners: {},
 
-            on: function(name,callback){
-                if(!this._listeners[name]){
+            on: function (name, callback) {
+                if (!this._listeners[name]) {
                     this._listeners[name] = [];
                 }
                 this._listeners[name].push(callback);
                 return this;
             },
 
-            off: function(name,callback){
-                if(!this._listeners[name]){
+            off: function (name, callback) {
+                if (!this._listeners[name]) {
                     return;
                 }
-                if(callback){
+                if (callback) {
                     var listeners = this._listeners[name];
-                    for(var i in listeners){
-                        if(callback == listeners[i]){
-                            listeners.splice(i,1);
+                    for (var i in listeners) {
+                        if (callback == listeners[i]) {
+                            listeners.splice(i, 1);
                             return;
                         }
                     }
-                }else{
+                } else {
                     delete this._listeners[name];
                 }
 
                 return this;
             },
 
-            dispatch: function(name,data){
-                if(!this._listeners[name]){
+            dispatch: function (name, data) {
+                if (!this._listeners[name]) {
                     return;
                 }
 
                 var listeners = this._listeners[name];
-                for(var i in listeners){
+                for (var i in listeners) {
                     listeners[i](data);
                 }
                 return this;
@@ -511,6 +511,13 @@
     });
 
     $.widget("vis-ui-js.resultTable", $["vis-ui-js"].resultTableBase, {
+
+        redraw: function (features) {
+            var resultTable = this;
+            resultTable.getApi().clear();
+            resultTable.getApi().rows.add(features);
+            resultTable.getApi().draw();
+        },
 
         addRow: function (feature) {
             var resultTable = this;
@@ -547,7 +554,7 @@
             rows.remove().draw();
         },
 
-        getButtonByFeature: function(clazz, feature) {
+        getButtonByFeature: function (clazz, feature) {
             var resultTable = this;
             var row = resultTable.getTableRowByFeature(feature);
             return row ? row.find(".button-navigation").find(clazz) : null;
