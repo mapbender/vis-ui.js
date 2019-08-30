@@ -512,6 +512,12 @@
 
     $.widget("vis-ui-js.resultTable", $["vis-ui-js"].resultTableBase, {
 
+        clear: function() {
+            var resultTable = this;
+            resultTable.getApi().clear();
+            resultTable.getApi().draw();
+        },
+
         redraw: function (features) {
             var resultTable = this;
             resultTable.getApi().clear();
