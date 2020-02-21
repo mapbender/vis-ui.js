@@ -461,6 +461,28 @@
             },
             selectOptionList: function(item) {
                 var options = item.options || [];
+                // More legay fun:
+                // necessary for options supplied as Array-like Object { '0' : 'A', '1' : 'B' }
+                function isStructurallyIdenticalToArray(object) {
+                    return Object.keys(object).every(function(key,index){
+                        return parseInt(key) == index;
+                    });
+                }
+                if (isStructurallyIdenticalToArray(options)) {
+                    options = Object.keys(options).sort().map(function(key){ return options[key]; });
+                }
+                // options might have been supplied as ordinary array with array-keys as option-values and array-values as option-labels, ['A','B','C','D'], assuming <option value=0>A</option>
+                if (_.isArray(options)) {
+
+                    options.forEach(function (option, key) {
+                        if (typeof option !== "object") {
+                            options[key] = {
+                                label: option,
+                                value: key
+                            }
+                        }
+                    });
+                }  else
                 if (!_.isArray(options)) {
                     console.warn("Passing an option mapping is deprecated (order cannot be guaranteed). Use a list.", options);
                     // legacy fun time: keys are used as labels, mapped values used as submit values
@@ -892,7 +914,8 @@
             // always deep-copy to prevent monkey-patches affecting other instances
             // Re-add readOnlyDeclarations on top to prevent overrides.
             this.declarations = $.extend({}, defaultDeclarations, options.declarations, readOnlyDeclarations);
-            if (options.type && !options.children) {
+            // In order to get the parent element rendered, checking for non-existance of options.children must be avoided
+            if (options.type) {
                 console.warn("Invocation of generateElements (plural!) with single item is deprecated. Put your item in a list and pass it in the children property.");
                 this.genElements(this.element, [options]);
             } else if(has(options, 'children')) {
