@@ -281,7 +281,7 @@
 
                         if(isRegExp){
                             console.error("Using Javascript code in the configuration is deprecated, but regular expression is ok",item.mandatory);
-                            hasValue = new RegExp(item.mandatory).exec(value) != null;
+                            hasValue = eval(item.mandatory).exec(value) != null;
                         }
 
                         if(hasValue){
