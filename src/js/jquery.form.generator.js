@@ -286,10 +286,13 @@
 
                         if(hasValue){
                             container.removeClass('has-error');
+                            inputField.trigger("has-error",false);
                         }else{
                             if(inputField.is(":visible")){
                                 var text = item.hasOwnProperty('mandatoryText')? item.mandatoryText: "Please, check!";
                                 $.notify( inputField, text, { position:"top right", autoHideDelay: 2000});
+                            } else {
+                                inputField.trigger("has-error",true);
                             }
                             container.addClass('has-error');
                         }
@@ -370,11 +373,14 @@
                         var isChecked = input.is(':checked');
                         if(isChecked){
                             container.removeClass('has-error');
+                            input.trigger("has-error",false);
                         }else{
                             container.addClass('has-error');
                             if(input.is(':visible')){
                                 var text = item.hasOwnProperty('mandatoryText') ? item.mandatoryText : "Please confirm!";
                                 $.notify( input, text, { position:"top left", autoHideDelay: 2000});
+                            } else {
+                                input.trigger("has-error",true);
                             }
 
                         }
