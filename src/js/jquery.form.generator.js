@@ -244,7 +244,7 @@
                 // @todo: fold very apparent copy & paste between this method and "checkbox" method
                 var inputField = input;
                 if (!input) {
-                    var type = item.type || 'text';
+                    var type = (item.type !== 'input' && item.type) || 'text';
                     inputField = $('<input class="form-control" type="' + type + '"/>');
                 }
                 var container = $('<div class="form-group"/>');
