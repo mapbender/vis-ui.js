@@ -491,9 +491,9 @@
                 }  else
                 if (!_.isArray(options)) {
                     console.warn("Passing an option mapping is deprecated (order cannot be guaranteed). Use a list.", options);
-                    // legacy fun time: keys are used as labels, mapped values used as submit values
+                    // legacy fun time: mapped values are used as labels, keys used as submit values
                     options = _.map(options, function(x, key) {
-                        return {value: x, label: key};
+                        return {value: key, label: x};
                     });
                 }
                 var optionElements = [];
