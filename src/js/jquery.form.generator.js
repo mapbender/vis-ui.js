@@ -475,7 +475,7 @@
                     });
                 }
                 if (isStructurallyIdenticalToArray(options)) {
-                    options = Object.keys(options).sort().map(function(key){ return options[key]; });
+                    options = Object.keys(options).sort(function(a, b){return a-b}).map(function(key){ return options[key]; });
                 }
                 // options might have been supplied as ordinary array with array-keys as option-values and array-values as option-labels, ['A','B','C','D'], assuming <option value=0>A</option>
                 if (_.isArray(options)) {
