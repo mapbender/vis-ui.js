@@ -2,6 +2,9 @@
 
     /**
      * Date selector based on $.ui.datepicker
+     * Replacement for <input type="date"> for browsers without proper HTML5 supprt.
+     * Hard-coded to German locale.
+     * Accepts no options. Accepting any options would conflict with operation of native HTML5 inputs.
      *
      * Widget can't be extended:
      * http://bugs.jqueryui.com/ticket/6228
@@ -10,10 +13,8 @@
      */
     $.widget("vis-ui-js.dateSelector", {
         _init: function() {
-            var widget = this;
-            var element = widget.element;
-            var dialog;
-            var datePicker = element.datepicker($.extend({
+            var $input = $('input', this.element);
+            var datePicker = $input.datepicker({
                 changeMonth:       true,
                 changeYear:        true,
                 gotoCurrent:       true,
@@ -21,31 +22,12 @@
                 firstDay:          1, //showWeek:          true,
                 dayNamesMin:       ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
                 monthNamesShort:   ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"], //showButtonPanel: true,
-                dateFormat:        'dd.mm.yy',
-                onChangeMonthYear: function(input, instance) {
-                    widget._trigger('changeMonthYear');
-                    setTimeout(function() {
-                        widget._trigger('render');
-                    }, 1);
-                }
-            }, widget.options)).data('datepicker');
-
-            dialog = datePicker.dpDiv;
-            dialog.on('show', function(e) {
-                widget._trigger('show');
-                widget._trigger('render');
-            });
-            dialog.on('hide', function(e) {
-                widget._trigger('hide');
-            });
-
-            element.bind('dateselectorrender',function(e){
-                var header = $(".ui-datepicker-header", dialog);
-                var headerButtons = header.find('a').addClass('button');
-                header.find('select').addClass('form-control');
-            });
-
-            dialog.addClass('dropdown-menu').addClass('modal-body');
+                dateFormat:        'yy-mm-dd'
+            }).data('datepicker');
+            // legacy styling hacks
+            // @todo: style via proper datepicker selectors in proper scope, do not add random classes that "seem to work"
+            // @todo: better yet, use original jquery ui css to style original jquery ui widgets
+            datePicker.dpDiv.addClass('dropdown-menu').addClass('modal-body');
         }
     });
 

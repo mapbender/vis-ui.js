@@ -2,6 +2,9 @@
  *
  * @author Andriy Oblivantsev <eslider@gmail.com>
  * @copyright 25.08.2015 by WhereGroup GmbH & Co. KG
+ * @deprecated know your own data types (objects vs arrays) and bring your own appropriate iterations
+ * @todo: remove usages from Digitizer 1.1+
+ * @todo: remove in v0.3.x
  */
 
 window.DataUtil = new function() {
@@ -15,20 +18,24 @@ window.DataUtil = new function() {
      *
      * @param items
      */
-    self.eachItem = function(items, callback) {
+    function eachItem_(items, callback) {
         var isArray = items instanceof Array;
         if(isArray) {
             for (var k in items) {
-                self.eachItem(items[k], callback);
+                eachItem_(items[k], callback);
             }
         } else {
             if(typeof items["type"] !== 'undefined') {
                 callback(items);
             }
             if(typeof items["children"] !== 'undefined') {
-                self.eachItem(items["children"], callback);
+                eachItem_(items["children"], callback);
             }
         }
+    }
+    this.eachItem = function(items, callback) {
+        console.warn("Global vis-ui.js window.DataUtil is deprecated and will be removed in v0.3");
+        eachItem_(items, callback);
     };
 
     /**
@@ -39,6 +46,7 @@ window.DataUtil = new function() {
      * @returns {boolean}
      */
     self.has = function(obj, key) {
+        console.warn("Global vis-ui.js window.DataUtil is deprecated and will be removed in v0.3");
         return typeof obj[key] !== 'undefined';
     };
 
@@ -51,6 +59,7 @@ window.DataUtil = new function() {
      * @returns {*}
      */
     self.getVal = function(obj, key, defaultValue) {
+        console.warn("Global vis-ui.js window.DataUtil is deprecated and will be removed in v0.3");
         return has(obj, key) ? obj[key] : defaultValue;
     }
 };

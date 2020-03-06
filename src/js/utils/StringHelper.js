@@ -6,6 +6,8 @@
  *
  * @author Andriy Oblivantsev <eslider@gmail.com>
  * @copyright 27.01.2015 by WhereGroup GmbH & Co. KG
+ * @deprecated all around useless with no known dependants
+ * @todo: remove in v0.2.x
  */
 window.StringHelper = new function() {
 

@@ -38,6 +38,20 @@
     }
 
     /**
+     * @param {String} expr
+     * @return {RegExp|null}
+     */
+    function expressionToRegex(expr) {
+        // for valid flags see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Advanced_searching_with_flags
+        var matches = expr.match(/^[/](.*?)[/]([gimsuy]*)$/);
+        if (matches) {
+            return new RegExp(matches[1], matches[2]);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Check if typeof object[key] !== 'undefined'
      *
      * @param obj
@@ -177,6 +191,15 @@
         genElements_: genElements_
     };
 
+    var browserSupportsHtml5Date = (function() {
+        // detect support for HTML5 date input; see https://stackoverflow.com/a/10199306
+        var dateInput = document.createElement('input');
+        var invalidDate = 'not-a-date';
+        dateInput.setAttribute('type', 'date');
+        dateInput.setAttribute('value', invalidDate);
+        return dateInput.value !== invalidDate;
+    })();
+
     // NOTE: bad indents deliberate to minimize diff
     var defaultDeclarations = $.extend({}, readOnlyDeclarations, {
             copyToClipboard: copyToClipboard,
@@ -246,6 +269,7 @@
                 if (!input) {
                     var type = (item.type !== 'input' && item.type) || 'text';
                     inputField = $('<input class="form-control" type="' + type + '"/>');
+                    inputField.attr(item.attr || {});
                 }
                 var container = $('<div class="form-group"/>');
 
@@ -266,59 +290,46 @@
                     inputField.attr('disabled','');
                 }
 
-
-                if(has(item, 'title')) {
-                    container.append(this.label(item));
-                    container.addClass('has-title')
+                var label;
+                if (item.title) {
+                    label = this.label(item);
+                    container.append(label);
                 }
 
-                if(has(item, 'mandatory') && item.mandatory) {
+                if (item.mandatory) {
+                    var validationCallback;
+                    if (item.mandatory === true) {
+                        validationCallback = function(value) {
+                            return $.trim(value).length;
+                        };
+                    } else if (typeof item.mandatory === 'string') {
+                        // legacy fun fact: string runs through eval, but result of eval can only be used
+                        // if it happens to have an method named .exec accepting a single parameter
+                        // => this was never compatible with anything but regex literals
+                        var rxp = expressionToRegex(item.mandatory);
+                        if (rxp) {
+                            validationCallback = function(value) {
+                                return rxp.test(value);
+                            }
+                        }
+                    }
+                    if (!validationCallback) {
+                        console.error("Invalid value in item.mandatory. Use boolean true or a regex literal.", item.mandatory, item);
+                        throw new Error("Invalid value in item.mandatory. Use boolean true or a regex literal.");
+                    }
                     // @todo: why in the world is this a data attribute? Validation belongs in a form submit handler.
                     //        HTML5 validation already does most of this without custom logic
-                    inputField.data('warn',function(value){
-                        var hasValue = $.trim(value) != '';
-                        var isRegExp = item.mandatory !== true;
-
-                        if(isRegExp){
-                            console.error("Using Javascript code in the configuration is deprecated, but regular expression is ok",item.mandatory);
-                            hasValue = eval(item.mandatory).exec(value) != null;
-                        }
-
-                        if(hasValue){
-                            container.removeClass('has-error');
-                            inputField.trigger("has-error",false);
-                        }else{
-                            if(inputField.is(":visible")){
-                                var text = item.hasOwnProperty('mandatoryText')? item.mandatoryText: "Please, check!";
-                                $.notify( inputField, text, { position:"top right", autoHideDelay: 2000});
-                            } else {
-                                inputField.trigger("has-error",true);
-                            }
-                            container.addClass('has-error');
-                        }
-                        return hasValue;
-                    });
+                    inputField.data('warn', validationCallback);
+                }
+                if (item.mandatoryText) {
+                    inputField.attr('data-visui-validation-message', item.mandatoryText);
                 }
 
-                if(has(item, 'infoText')) {
-                    var infoButton = $('<a class="infoText"></a>');
-                    infoButton.on('click touch press',function(e){
-                       var button = $(e.currentTarget);
-                        $.notify(button.attr('title'),'info');
-                    });
-                    infoButton.attr('title', item.infoText);
-                    container.append(infoButton);
-                }
-
-
-                if(has(item, 'copyClipboard')) {
-
-                    var copyButton = $('<a class="copy-to-clipboard"><i class="fa fa-clipboard far-clipboard" aria-hidden="true"></i></a>');
-                    copyButton.on('click', function(e) {
-                        var data = container.formData(false);
-                        this.copyToClipboard(data[item.name]);
-                    });
-                    container.append(copyButton);
+                if (label && item.copyClipboard) {
+                    label.append('&nbsp;', $('<i/>')
+                        .addClass('fa fa-clipboard far-clipboard -visui-copytoclipboard')
+                        .attr('aria-hidden', 'true')
+                    );
                 }
 
                 container.append(inputField);
@@ -336,69 +347,37 @@
                 if(_.has(item, 'name')) {
                     label.attr('for', item.name);
                 }
+                if (item.infoText) {
+                    var $icon = $('<i/>')
+                        .addClass('fa fa-info-circle -visui-infotext')
+                        .attr('title', item.infoText)
+                    ;
+                    label.append('&nbsp;', $icon);
+                }
+
                 return label;
             },
             checkbox: function(item, input) {
                 // @todo: fold very apparent copy & paste between this method and "input" method
                 var container = $('<div class="form-group checkbox"/>');
-                var label = $('<label/>');
+                var label = this.label(item);
 
                 input = input ? input : $('<input type="checkbox"/>');
 
                 // @todo: remove excessive data bindings
                 input.data('declaration',item);
 
-                label.append(input);
-
-                if(has(item, 'name')) {
-                    input.attr('name', item.name);
-                }
-
-                if(has(item, 'value')) {
-                    input.val(item.value);
-                }
-
-                if(has(item, 'title')) {
-                    label.append(item.title);
-                }
-
-                if(has(item, 'checked') && item.checked) {
-                    input.attr('checked', "checked");
-                }
-
-                if(has(item, 'mandatory') && item.mandatory) {
-                    // @todo: why in the world is this a data attribute? Validation belongs in a form submit handler.
-                    //        HTML5 validation already does most of this without custom logic
-                    input.data('warn',function(){
-                        var isChecked = input.is(':checked');
-                        if(isChecked){
-                            container.removeClass('has-error');
-                            input.trigger("has-error",false);
-                        }else{
-                            container.addClass('has-error');
-                            if(input.is(':visible')){
-                                var text = item.hasOwnProperty('mandatoryText') ? item.mandatoryText : "Please confirm!";
-                                $.notify( input, text, { position:"top left", autoHideDelay: 2000});
-                            } else {
-                                input.trigger("has-error",true);
-                            }
-
-                        }
-                        return isChecked;
-                    });
-                }
+                label.prepend(input);
+                input.attr({
+                    name: item.name || null,
+                    value: item.value || null
+                });
+                input.prop({
+                    required: !!item.mandatory,
+                    checked: !!item.checked
+                });
 
                 container.append(label);
-
-                if(has(item, 'infoText')) {
-                    var infoButton = $('<a class="infoText"></a>');
-                    infoButton.on('click touch press',function(e){
-                        var button = $(e.currentTarget);
-                        $.notify(button.attr('title'),'info');
-                    });
-                    infoButton.attr('title', item.infoText);
-                    container.append(infoButton);
-                }
 
                 return container;
             },
@@ -505,19 +484,25 @@
             select: function(item) {
                 var select = $('<select class="form-control"/>');
                 var container = this.input(item, select);
-                var value = has(item, 'value') ? item.value : null;
+                var value = item.value;
 
                 container.addClass('select-container');
 
-                if(has(item, 'multiple') && item.multiple) {
-                    select.attr('multiple', 'multiple');
-                }
                 select.append(this.selectOptionList(item));
-                select.val(value);
+                if (item.multiple) {
+                    select.prop('multiple', true);
+                    var separator = item.separator || ',';
+                    if (value && !$.isArray(value)) {
+                        value = value.split(separator);
+                    }
+                    select.attr('data-visui-multiselect-separator', separator);
+                    select.val(value || null);
+                } else {
+                    select.val(value || "");
+                }
                 if ((item.multiple || item.select2) && (typeof select.select2 === 'function')) {
                     select.select2(item);
                 }
-
 
                 return container;
             },
@@ -702,10 +687,36 @@
                 return fieldSet;
             },
             date: function(item) {
-                var inputHolder = this.input(item);
-                var input = inputHolder.find('> input');
-                input.dateSelector(item);
-                return inputHolder;
+                var value = item.value;
+                if (item.dateFormat && item.dateFormat !== 'yy-mm-dd') {
+                    console.warn("Ignoring invalid dateFormat setting. The only possible value is 'yy-mm-dd'. See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date", item);
+                }
+                if (value === null || (typeof value === 'undefined')) {
+                    value = '';
+                }
+                if (value !== '' && !(typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/))) {
+                    if (!(typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/))) {
+                        console.error("Invalid value for date input, ignoring", value);
+                        value = '';
+                    }
+                }
+                if (item.mandatory && !value) {
+                    value = (new Date()).toISOString().slice(0, 10);
+                }
+
+                if (browserSupportsHtml5Date) {
+                    return this.input($.extend({}, item, {
+                        type: 'date',
+                        value: value
+                    }));
+                } else {
+                    var textInput = this.input($.extend({}, item, {
+                        type: 'text',
+                        value: value
+                    }));
+                    textInput.dateSelector();
+                    return textInput;
+                }
             },
             colorPicker: function(item) {
                 var container = $('<div class="form-group"/>');
@@ -820,7 +831,30 @@
              * @param item
              */
             text: function(item) {
-                var text = $('<div/>').attr(item.attr || {}).addClass('text');
+                var callback;
+                if (!item.text) {
+                    console.error('Missing value property .text for type "text" item', item);
+                    throw new Error('Missing value property .text for type "text" item');
+                }
+                var text = $('<div/>').attr(item.attr || {}).addClass('text -visui-text-callback');
+                if (typeof item.text === 'function') {
+                    callback = function(values) {
+                        return (item.text)(values);
+                    };
+                } else {
+                    console.warn("Using eval'd JavaScript code for item type text is deprecated. Supply a function.", item);
+                    callback = function(values) {
+                        try {
+                            var data = values;  // for eval scope
+                            var declaration = item; // for eval scope
+                            return eval(item.text);
+                        } catch (e) {
+                            console.error('Failed to evaluate text type item content', item.text, item, values);
+                            throw new Error('Failed to evaluate text type item content');
+                        }
+                    };
+                }
+                text.data('visui-text-callback', callback);
                 var container = this.input(item, text);
                 container.addClass('text');
                 return container;
@@ -830,8 +864,10 @@
              * Simple container
              *
              * @param item
+             * @todo v0.2.x: remove this
              */
             container: function(item) {
+                console.warn("Generating a type: container via vis-ui.js is deprecated and will be removed in v0.2", item);
                 var container = $('<div/>').attr(item.attr || {}).addClass('form-group');
                 container.append(this.genElements_(this, item.children || []));
                 return container;
@@ -841,8 +877,10 @@
              * Simple accordion
              *
              * @param item
+             * @todo v0.2.x: remove this
              */
             accordion: function(item) {
+                console.warn("Generating a type: accordion via vis-ui.js is deprecated and will be removed in v0.2", item);
                 var declarations = this;
                 var container = $('<div class="accordion"/>');
                 if(has(item, 'children')) {
@@ -852,16 +890,6 @@
 
                         if(has(child, 'head')) {
                             pageHeader.append(declarations.genElement_(declarations, child.head));
-
-                            // if(has(child.head, 'title')) {
-                            //     pageHeader.append(widget.label(headItem));
-                            // }
-                            //
-                            // if(has(child.head, 'children')) {
-                            //     _.each(child.head.children, function(headItem) {
-                            //         pageHeader.append(widget.genElement(headItem));
-                            //     })
-                            // }
                         }
 
                         if(has(child, 'content')) {
@@ -929,6 +957,14 @@
             }
 
             this.element.addClass('vis-ui');
+            this.element.on('click touch press', '.-visui-infotext[title]', function() {
+                $.notify($(this).attr('title'), 'info');
+            });
+            this.element.on('click', '.-visui-copytoclipboard', function() {
+                var $input = $('input, select, textarea', $(this).closest('.form-group'));
+                copyToClipboard($input.val());
+            });
+
             this._super(options);
             this.refresh();
         },
