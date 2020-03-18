@@ -833,10 +833,10 @@
              */
             text: function(item) {
                 var callback;
-                if (!item.text) {
-                    console.error('Missing value property .text for type "text" item', item);
-                    throw new Error('Missing value property .text for type "text" item');
-                }
+                //if (!item.text) {
+                //    console.error('Missing value property .text for type "text" item', item);
+                //    throw new Error('Missing value property .text for type "text" item');
+                //}
                 var text = $('<div/>').attr(item.attr || {}).addClass('text -visui-text-callback');
                 if (typeof item.text === 'function') {
                     callback = function(values) {
