@@ -1,7 +1,8 @@
 (function($) {
 
     /**
-     * jQuery tabs with bootstrap styles
+     * jQuery tabs with bootstrap styles and auto-generation of tab headers and content panels
+     * Internally unreachable
      */
     $.widget("vis-ui-js.tabNavigator", $.ui.tabs, {
         options: {
@@ -10,88 +11,62 @@
             var widget = this;
             var options = widget.options;
             var el = widget.element;
-            var activeTab = options.hasOwnProperty('active') ? options.active : -1;
-            var ul = $('<ul class="nav nav-tabs" role="tablist"/>');
+            if (!this._getList().length) {
+                this.element.prepend('<ul/>');
+            }
+            this._getList().addClass('nav nav-tabs');
 
-            el.append(ul);
-
-            var r = this._super();
-            //var wrapper = navigation.closest('.ui-tabs');
             el.addClass('mapbender-element-tab-navigator');
 
             if(options.hasOwnProperty('children')){
+                // internally unreachable path
                 $.each(options.children,function(){
-                    var tab = widget._add(this);
+                    var $tab = widget._add(this);
+                    $tab.data('item', this);
+                });
+                el.on('tabnavigatoractivate',function(e,ui) {
+                    var item = $(ui.newTab).data('item');
+                    if(item.hasOwnProperty('active')){
+                        item.active(e,ui);
+                    }
                 });
             }
 
-            el.on('tabnavigatoractivate',function(e,ui){
-                var item = $(ui.newTab).data('item');
-                if(item.hasOwnProperty('active')){
-                    item.active(e,ui);
-                }
-            });
-
-           if(activeTab > -1) {
-                widget.option('active', activeTab);
-            }
-
-            if(widget.isClosable()) {
-                ul.delegate('>li> a > span.close', 'click', function(e) {
-                    var closeButton = $(this);
-                    widget.close(closeButton.closest('li').attr('aria-labelledby'));
-                    e.stopPropagation();
-                    e.preventDefault();
-                });
-            }
-
-            return r;
+            return this._super();
         },
-
-        close: function(uuid) {
-            var widget = this;
-            var li = $('>ul>li[aria-labelledby="' + uuid + '"]', $(widget.element));
-            var uuid = li.attr('aria-labelledby');
-            var tabs = li.closest('.ui-tabs');
-            var div = tabs.find('>div[aria-labelledby="' + uuid + '"]');
-
-            li.remove();
-            div.remove();
-            widget.refresh();
-
-            widget._trigger('close',div);
+        /**
+         * Static (no this context)
+         * @param {jQuery} $panel
+         * @param {String} title
+         * @return {jQuery}
+         */
+        _renderTab: function($panel, title) {
+            var $anchor = $('<a>')
+                .attr('href', '#' + $panel.attr('id'))
+                .text(title)
+            ;
+            return $('<li>')
+                .append($anchor)
+            ;
         },
-
-        closeAll: function() {
-            var widget = this;
-            $.each($('>ul>li', $(widget.element)), function() {
-                widget.close($(this).attr('aria-labelledby'));
-            });
+        /**
+         * Static (no this context)
+         * @param {(jQuery|String)} content
+         * @private
+         */
+        _renderPanel: function(content) {
+            return $("<div>")
+                .uniqueId()
+                .addClass('tab-content')
+                .append(content)
+            ;
         },
-
-        isClosable: function() {
-            return this.options.hasOwnProperty('closable') && this.options.closable;
-        },
-
         _add: function (item){
-
-            var el = this.element;
-            var navigation = $("> .ui-tabs-nav",el);
-            var id = item.hasOwnProperty('id') ? item.id : 'tabs-' + guid();
-            //location.href alone will not work with html-base-tag in some cases, so we use this monstrosity here to be 100% safe
-            var queryStringMatch = /\?.*/.exec(location.href);
-            var queryString = queryStringMatch && queryStringMatch[0] || '';
-            var href = location.origin + location.pathname + queryString +'#'+id;
-            var label = $('<li><a role="tab" data-toggle="tab" href="' + href+ '">' + item.title + (this.isClosable() ? '<span class="close">Close</span>' : '') + '</a></li>');
-            var contentHolder = $("<div id='" + id + "' class='tab-content'/>");
-
-            label.data('item',item);
-
-            navigation.append(label);
-            contentHolder.append(item.html);
-            el.append(contentHolder);
-            this.refresh();
-            return contentHolder;
+            var $panel = this._renderPanel(item.html);
+            var $tab = this._renderTab($panel, item.title);
+            this._getList().append($tab);
+            this.element.append($panel);
+            return $tab;
         },
 
         add: function(title, htmlElement, activate) {
@@ -102,21 +77,12 @@
             if(activate) {
                 this.option('active', this.size() - 1);
             }
+            this.refresh();
             return content;
         },
 
         size: function() {
-            return $(">ul>li", this.element).size();
+            return this.tabs.length;
         }
     });
-
-    var guid = (function() {
-        function s4() {
-            return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-        }
-
-        return function() {
-            return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-        };
-    })();
 })(jQuery);

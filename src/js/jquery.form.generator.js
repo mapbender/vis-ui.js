@@ -650,23 +650,24 @@
                 return container;
             },
             tabs: function(item) {
-                var container = $('<div/>');
-                var declarations = this;
-                var tabs = [];
-                if(has(item, 'children') ) {
-                    $.each(item.children, function(k, subItem) {
-                        var htmlElement = declarations.genElement_(declarations, subItem);
-                        var tab = {
-                            html: htmlElement
-                        };
-
-                        if(has(subItem, 'title')) {
-                            tab.title = subItem.title;
-                        }
-                        tabs.push(tab);
-                    });
+                var $tabList = $('<ul/>');
+                var container = $('<div/>').append($tabList);
+                var children = item.children || [];
+                for (var i = 0; i < children.length; ++i) {
+                    var subItem = children[i];
+                    var panelContent = this.genElement_(this, subItem);
+                    var $panel = $('<div>').uniqueId().append(panelContent);
+                    var $tabHeader = $('<li>').append($('<a>').attr('href', '#' + $panel.attr('id')).text(subItem.title));
+                    $tabList.append($tabHeader);
+                    container.append($panel);
                 }
-                container.tabNavigator({children: tabs});
+                container.tabs({
+                    classes: {
+                        "ui-tabs": "ui-tabs mapbender-element-tab-navigator",
+                        "ui-tabs-nav": "ui-tabs-nav nav nav-tabs",
+                        "ui-tabs-panel": "ui-tabs-panel tab-content"
+                    }
+                });
                 return container;
             },
             fieldSet: function(item) {

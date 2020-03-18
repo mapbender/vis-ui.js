@@ -114,17 +114,19 @@ $.fn.formData = (function() {
             var validationCallback = input.data('warn');
             var isValid = (!validationCallback || validationCallback(value)) && input.is(':valid');
             input.closest('.form-group').toggleClass('has-error', !isValid);
-            if (!isValid) {
-                input.trigger("has-error", true);
+            if (!isValid && !firstInput) {
+                var $tabElement = input.closest('.ui-tabs');
+                var tabIndex = $tabElement.length && input.closest('.ui-tabs-panel').index('.ui-tabs-panel');
+                if ($tabElement) {
+                    $tabElement.tabs({active: tabIndex});
+                }
+                firstInput = input;
+                input.focus();
             }
 
             if (!isValid && input.is(":visible") && $.notify) {
                 var text = input.attr('data-visui-validation-message') || "Please, check!";
                 $.notify(input, text, {position: "top right", autoHideDelay: 2000});
-                if (!firstInput) {
-                    firstInput = input;
-                    input.focus();
-                }
             }
             values[this.name] = value;
         });
