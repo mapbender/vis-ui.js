@@ -126,7 +126,9 @@ $.fn.formData = (function() {
 
             if (!isValid && input.is(":visible") && $.notify) {
                 var text = input.attr('data-visui-validation-message') || "Please, check!";
-                $.notify(input, text, {position: "top right", autoHideDelay: 2000});
+                if (!input.hasClass("select2-hidden-accessible")) {
+                    $.notify(input, text, {position: "top right", autoHideDelay: 2000});
+                }
             }
             values[this.name] = value;
         });
