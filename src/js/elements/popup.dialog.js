@@ -1,33 +1,35 @@
 (function($) {
-
     // fake dialogExtend check for ui-dialog
-    $.fn.orignalDialogFunc = $.fn.dialog;
-
-    $.fn["dialog"] = function(arg1, arg2) {
-        return this.hasClass('popup-dialog') ? this.popupDialog(arg1, arg2) :  this.orignalDialogFunc(arg1, arg2);
-    };
+    if (!$.fn.orignalDialogFunc) {
+        // sic!
+        $.fn.orignalDialogFunc = $.fn.dialog;
+    }
+    var $doc = $(document);
+    if (!$doc.data('visui-monkeypatch-uidialog')) {
+        $.fn["dialog"] = function(arg1, arg2) {
+            return this.hasClass('popup-dialog') ? this.popupDialog(arg1, arg2) :  this.orignalDialogFunc(arg1, arg2);
+        };
+        $doc.data('visui-monkeypatch-uidialog', true);
+    }
 
     /**
-     * jQuery dialog with bootstrap styles
+     * jQueryui dialog with unholy mix of bootstrap and Mapbender custom styles
      *
      * @author Andriy Oblivantsev <eslider@gmail.com>
      * @copyright 05.11.2014 by WhereGroup GmbH & Co. KG
+     * @todo: Get this over into a separate repository (WITH a working stylesheet) or into Mapbender (current location of required stylesheet)
+     *        it makes no sense to have markup generation and css class modifiers here, separate from the stylesheets that make it work
      */
     $.widget("vis-ui-js.popupDialog", $.ui.dialog, {
-
-        // track if window is opened
-        isOpened: false,
-
         /**
-         * Constructor, runs only if the object wasn't created before
-         *
          * @return {*}
          * @private
          */
         _create: function() {
             var element = this.element;
-            var hasDialogExtend = !!element.dialogExtend;
+            // Unholy mix of jQuery UI and Bootstrap and Mapbender CSS
             element.addClass('popup-dialog');
+            element.addClass('modal-body');
 
             // overrides default options
             $.extend(this.options, {
@@ -63,89 +65,56 @@
             });
 
             this._super();
-
-            if (hasDialogExtend) {
-                // fake dialogExtend check for ui-dialog
-                element.data("ui-dialog",true);
-                element.dialogExtend($.extend(true, {
+        },
+        _createTitlebar: function() {
+            this._super();
+            if (this.element.dialogExtend) {
+                // NOTE: no widget-level options defaults for these
+                var extendableOptions = $.extend(true, {
                     closable:    true,
                     maximizable: true,
                     collapsable: true
-                }, this.options));
+                }, this.options);
+
+                this.element.data("ui-dialog", true);
+                if (extendableOptions.maximizable && (typeof this.options.dblclick === 'undefined')) {
+                    extendableOptions.dblclick = 'maximize';
+                }
+
+                this.element.dialogExtend(extendableOptions);
             }
-
-            var dialog = element.closest('.ui-dialog');
-            if(this.options.modal){
-                var modal = $('<div class="mb-element-modal-dialog"><div class="background" unselectable="on"></div></div>');
-
-                modal.insertBefore(dialog);
-                modal.prepend(dialog);
-                modal.find('> .background').on('click mousemove mouseout mouseover',function(e){
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                });
-                element.bind('popupdialogclose',function(){
-                    modal.fadeOut(function(){
-                        modal.remove();
-                    });
-                });
-            }
-
-            if (hasDialogExtend) {
-                // Fullscreen on double click
-                // @todo: check effective 'maximizable' configuration?
-                $(dialog).dblclick(function(event) {
-                    var target = $(event.target);
-                    if(!target.is('.ui-dialog-titlebar, .ui-dialog-title')){
-                        return;
-                    }
-
-                    if(element.dialogExtend('state') == 'normal'){
-                        element.dialogExtend('maximize');
-                    }else{
-                        element.dialogExtend('restore');
-                    }
-                });
+            // Unholy mix of jQuery UI and Bootstrap and Mapbender CSS
+            this.uiDialogTitlebar.addClass('modal-header');
+            // @todo Mapbender: resolve Mapbender css dependency on generally not advantageous bootstrap .close class
+            //                  to generate consistent close button vs jquerydialogextend not-really-button visuals
+            $('.ui-dialog-titlebar-close', this.uiDialogTitlebar).addClass('close');
+        },
+        open: function() {
+            this._super();
+            if (this.overlay) {
+                this.overlay.addClass('mb-element-modal-dialog');
             }
         },
-
-        /**
-         * Overrides default open method, but adds some Bootstrap classes to the dialog
-         * @return {}
-         */
-        open: function() {
-            if(this.isOpened){
-                return
-            }
-            this.isOpened = true;
-
-            var content = $(this.element);
-            var dialog = content.closest('.ui-dialog');
-            var header = $('.ui-widget-header', dialog);
-            var closeButton = $('.ui-dialog-titlebar-close', header);
-            var dialogBody = $('.ui-dialog-content', dialog);
-            var dialogBottomPane = $('.ui-dialog-buttonpane', dialog);
-            var dialogBottomButtons = $('.ui-dialog-buttonset > .ui-button', dialogBottomPane);
-
-            // Marriage of jQuery UI and Bootstrap
-            dialog.addClass('modal-content');
-            dialogBottomPane.addClass('modal-footer');
-            dialogBottomButtons.addClass('button');
-            header.addClass('modal-header');
-            closeButton.addClass('close');
-            dialogBody.addClass('modal-body');
-
-            // Set as mapbender element
-            dialog.addClass('mb-element-popup-dialog');
-            dialogBottomButtons.addClass('btn');
-
-            // Fix switch between windows
-            if(dialog.css('z-index') == "auto"){
-                dialog.css('z-index',1);
-            }
-
-            return this._super();
+        _createWrapper: function() {
+            this._super();
+            // Unholy mix of jQuery UI and Bootstrap and Mapbender CSS
+            this.uiDialog.addClass('modal-content mb-element-popup-dialog');
+        },
+        _createButtonPane: function() {
+            // Unholy mix of jQuery UI and Bootstrap and Mapbender CSS
+            this._super();
+            this.uiDialogButtonPane.addClass('modal-footer');
+        },
+        _createButtons: function() {
+            this._super();
+            $('button', this.uiButtonSet).each(function() {
+                var $b = $(this);
+                // leave fully formed Bootstrap buttons alone; add Mapbender .button (for default color) plus
+                // Bootstrap .btn (for margin) otherwise
+                if (!$b.hasClass('btn')) {
+                    $(this).addClass('button btn');
+                }
+            });
         }
     });
 

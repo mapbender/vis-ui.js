@@ -9,49 +9,25 @@
  * @copyright 02.02.2015 by WhereGroup GmbH & Co. KG
  *
  */
-$.fn.formData = function(values) {
-    var form = $(this);
-    var inputs = $(':input', form).get();
-    var hasNewValues = typeof values == 'object';
-    var textElements = $(".form-group.text", form);
-
-
-    if (hasNewValues) {
-
-        $.each(textElements, function() {
-            var textElementContainer = $(this);
-            var textElement = $('.text', textElementContainer);
-            var declaration = textElementContainer.data('item');
-            if(declaration.hasOwnProperty('text')) {
-                if (typeof declaration.text === 'function') {
-                    textElement.html(declaration.text(values));
-                } else {
-                    var html = "";
-                    try {
-                        console.error("Using Javascript code in the configuration is deprecated",declaration.text);
-                        var data = values;
-                        eval('html=' + declaration.text + ';');
-                    } catch (e) {
-                        console.error("The defenition", declaration, " of ", textElement, ' is erroneous.', e);
-                    }
-                    textElement.html(html);
-                }
-            }
+$.fn.formData = (function() {
+    function setValues(form, values) {
+        $('.-visui-text-callback', form).each(function() {
+            var textElement = $(this);
+            var callback = textElement.data('visui-text-callback');
+            /** @todo: why .html? .text would be safer */
+            textElement.html(callback.call(null, values));
         });
-
-        $.each(inputs, function() {
+        $(':input[name]', form).each(function() {
             var input = $(this);
             var value = values[this.name];
-            var declaration = input.data('declaration');
 
             if(values.hasOwnProperty(this.name)) {
 
                 switch (this.type) {
                     case 'select-multiple':
-                        var type = declaration.fieldType ? declaration.fieldType : 'text';
-                        if(type == 'text' && value ) {
-                            var separator = declaration.separator ? declaration.separator : ',';
-                            input.val($.isArray(value) ? value : value.split(separator));
+                        if (value && !$.isArray(value)) {
+                            var separator = input.attr('data-visui-multiselect-separator') || ',';
+                            input.val(value.split(separator));
                         } else {
                             input.val(value);
                         }
@@ -73,14 +49,9 @@ $.fn.formData = function(values) {
 
                     case 'text':
                         if(input.hasClass('hasDatepicker')) {
-                            var dateFormat = input.datepicker("option", "dateFormat");
-
                             if(value === '' || value === 0 || value === '0') {
                                 value = null;
                             }
-                            // if(value !== null) {
-                                // value = $.datepicker.formatDate(dateFormat, $.datepicker.parseDate(dateFormat, value))
-                            // }
 
                             input.datepicker("setDate", value);
                             input.datepicker("refresh");
@@ -117,17 +88,13 @@ $.fn.formData = function(values) {
             }
         });
         return form;
-    } else {
-        values = {};
+    }
+    function getValues(form) {
+        var values = {};
         var firstInput;
-        $.each(inputs, function() {
+        $(':input[name]', form).each(function() {
             var input = $(this);
             var value;
-            var declaration = input.data('declaration');
-
-            if(this.name == ""){
-                return;
-            }
 
             switch (this.type) {
                 case 'checkbox':
@@ -135,7 +102,7 @@ $.fn.formData = function(values) {
                     if(values.hasOwnProperty(this.name) && values[this.name] != null){
                         return;
                     }
-                    value = input.is(':checked') ? input.val() : null;
+                    value = input.is(':checked') && input.val();
                     break;
                 default:
                     value = input.val();
@@ -144,29 +111,36 @@ $.fn.formData = function(values) {
             if(value === ""){
                 value = null;
             }
-
-            if(values !== false && declaration){
-                if(declaration.hasOwnProperty('mandatory') && declaration.mandatory ){
-                    var isDataReady = false;
-                    if(typeof declaration.mandatory === "function"){
-                        isDataReady = declaration.mandatory(input, declaration, value);
-                    } else{
-                        isDataReady = input.data('warn')(value);
-                    }
-                    if(!isDataReady && !firstInput && input.is(":visible")){
-                        firstInput = input;
-                        input.focus();
-                    }
+            var validationCallback = input.data('warn');
+            var isValid = (!validationCallback || validationCallback(value)) && input.is(':valid');
+            input.closest('.form-group').toggleClass('has-error', !isValid);
+            if (!isValid && !firstInput) {
+                var $tabElement = input.closest('.ui-tabs');
+                var tabIndex = $tabElement.length && input.closest('.ui-tabs-panel').index('.ui-tabs-panel');
+                if ($tabElement) {
+                    $tabElement.tabs({active: tabIndex});
                 }
-                values[this.name] = value;
-            }else{
-                values[this.name] = value;
+                firstInput = input;
+                input.focus();
             }
 
+            if (!isValid && input.is(":visible") && $.notify) {
+                var text = input.attr('data-visui-validation-message') || "Please, check!";
+                $.notify(input, text, {position: "top right", autoHideDelay: 2000});
+            }
+            values[this.name] = value;
         });
         return values;
     }
-};
+    function handleArgs(values) {
+        if (values) {
+            return setValues($(this), values);
+        } else {
+            return getValues($(this));
+        }
+    }
+    return handleArgs;
+})();
 
 $.fn.disableForm = function() {
     var form = this;
