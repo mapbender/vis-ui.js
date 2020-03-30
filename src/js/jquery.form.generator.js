@@ -952,7 +952,7 @@
             // always deep-copy to prevent monkey-patches affecting other instances
             // Re-add readOnlyDeclarations on top to prevent overrides.
             this.declarations = $.extend({}, defaultDeclarations, options.declarations, readOnlyDeclarations);
-            if (options.type && !options.children) {
+            if (options.type) {
                 console.warn("Invocation of generateElements (plural!) with single item is deprecated. Put your item in a list and pass it in the children property.");
                 this.genElements(this.element, [options]);
             } else if(has(options, 'children')) {
