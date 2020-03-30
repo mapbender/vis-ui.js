@@ -448,10 +448,35 @@
                 var options = item.options || [];
                 if (!_.isArray(options)) {
                     console.warn("Passing an option mapping is deprecated (order cannot be guaranteed). Use a list.", options);
-                    // legacy fun time: keys are used as labels, mapped values used as submit values
-                    options = _.map(options, function(x, key) {
-                        return {value: x, label: key};
-                    });
+                    // More legay fun:
+                    // necessary for options supplied as Array-like Object { '0' : 'A', '1' : 'B' }
+                    function isStructurallyIdenticalToArray(object) {
+                        return Object.keys(object).every(function(key,index){
+                            return parseInt(key) == index;
+                        });
+                    }
+                    if (isStructurallyIdenticalToArray(options)) {
+                        options = Object.keys(options).sort(function(a, b){return a-b}).map(function(key){ return options[key]; });
+                    }
+                    // options might have been supplied as ordinary array with array-keys as option-values and array-values as option-labels, ['A','B','C','D'], assuming <option value=0>A</option>
+                    if (_.isArray(options)) {
+
+                        options.forEach(function (option, key) {
+                            if (typeof option !== "object") {
+                                options[key] = {
+                                    label: option,
+                                    value: key
+                                }
+                            }
+                        });
+                    }  else
+                    if (!_.isArray(options)) {
+                        console.warn("Passing an option mapping is deprecated (order cannot be guaranteed). Use a list.", options);
+                        // legacy fun time: mapped values are used as labels, keys used as submit values
+                        options = _.map(options, function(x, key) {
+                            return {value: key, label: x};
+                        });
+                    }
                 }
                 var optionElements = [];
                 for (var i = 0; i < options.length; ++i) {
