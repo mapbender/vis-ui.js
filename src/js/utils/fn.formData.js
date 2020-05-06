@@ -112,7 +112,7 @@ $.fn.formData = (function() {
                 value = null;
             }
             var validationCallback = input.data('warn');
-            var isValid = (!validationCallback || validationCallback(value)) && input.is(':valid');
+            var isValid = (!validationCallback || validationCallback(value)) && input.is(':not(:invalid)');
             input.closest('.form-group').toggleClass('has-error', !isValid);
             if (!isValid && !firstInput) {
                 var $tabElement = input.closest('.ui-tabs');
