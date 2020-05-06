@@ -98,6 +98,10 @@ $.fn.formData = (function() {
 
             switch (this.type) {
                 case 'checkbox':
+                    // Legacy: non-checked checkboxes evaluate to 'null' not 'false' since that is what the database expects
+                    // A different solution might consider the input's value and send the string "false" if the input's value is the string "true"
+                    value = input.is(':checked') ? input.val() : null;
+                    break;
                 case 'radio':
                     if(values.hasOwnProperty(this.name) && values[this.name] != null){
                         return;
