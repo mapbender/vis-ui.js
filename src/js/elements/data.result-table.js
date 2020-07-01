@@ -448,7 +448,7 @@
             var tableApi = this.getApi();
             var result = _.first(tableApi.rows(function(idx, _data, row) {
                 return _data == data
-            }).nodes());
+            }, { search: 'applied'}).nodes());
 
             return result ? $(result) : result;
         },
@@ -465,7 +465,7 @@
                 domRow = domRow[0]
             }
             
-            var nodePosition = tableApi.rows({order: 'current'}).nodes().indexOf(domRow);
+            var nodePosition = tableApi.rows({order: 'current', search: 'applied' }).nodes().indexOf(domRow);
             var pageNumber = Math.floor(nodePosition / rowsOnOnePage);
             tableApi.page(pageNumber).draw( false );
             return pageNumber;
