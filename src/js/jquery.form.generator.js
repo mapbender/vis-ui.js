@@ -532,7 +532,7 @@
                             var bImage = $('<img src="' + image.attr('src') + '"/>');
                             var _popupConfig = {
                                 title: image.title ? image.title : 'Image',
-                                width: bigImage.width
+                                width:'100%'
                             };
                             var maxHeight = $(window).height() - 100;
                             if(bigImage.height > maxHeight) {
@@ -540,9 +540,8 @@
                             }
                             dialog.popupDialog(_popupConfig);
                             bImage.css({
-                                height:      'auto',
-                                width:       '100%',
-                                'max-width': bigImage.width
+                                width: bigImage.width,
+                                height: bigImage.height
                             });
                             dialog.append(bImage);
                         };
