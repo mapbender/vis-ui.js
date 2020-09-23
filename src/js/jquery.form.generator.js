@@ -311,6 +311,15 @@
                             validationCallback = function(value) {
                                 return rxp.test(value);
                             }
+                        } else {
+                            var evaluated = eval(item.mandatory);
+                            var isFunction = evaluated instanceof Function;
+                            if (isFunction) {
+                                validationCallback = function(value) {
+                                    var isMandatory = evaluated.apply(inputField, []);
+                                    return !isMandatory || !!$.trim(value).length;
+                                }
+                            }
                         }
                     }
                     if (!validationCallback) {
