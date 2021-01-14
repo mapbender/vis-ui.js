@@ -300,7 +300,8 @@
                     var validationCallback;
                     if (item.mandatory === true) {
                         validationCallback = function(value) {
-                            return $.trim(value).length;
+                            var isSelectAndEmpty = item.type == "select" && (value === '0' || value ===  0 ) && inputField.find("option:selected").text() == "";
+                            return !!$.trim(value).length && !isSelectAndEmpty;
                         };
                     } else if (typeof item.mandatory === 'string') {
                         // legacy fun fact: string runs through eval, but result of eval can only be used
