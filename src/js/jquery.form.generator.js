@@ -282,6 +282,10 @@
                     }
                 });
 
+                if(has(item, 'inputCss')) {
+                    inputField.css(item.inputCss);
+                }
+
                 if(has(item, 'value')) {
                     inputField.val(item.value);
                 }
