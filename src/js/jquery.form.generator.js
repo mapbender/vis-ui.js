@@ -721,19 +721,35 @@
                     value = (new Date()).toISOString().slice(0, 10);
                 }
 
+                var textInput;
                 if (browserSupportsHtml5Date) {
-                    return this.input($.extend({}, item, {
+                    textInput = this.input($.extend({}, item, {
                         type: 'date',
                         value: value
                     }));
                 } else {
-                    var textInput = this.input($.extend({}, item, {
+                    textInput = this.input($.extend({}, item, {
                         type: 'text',
                         value: value
                     }));
                     textInput.dateSelector();
-                    return textInput;
                 }
+                if (item.allowClear) {
+                    var $button = $('<button>X</button>');
+                    $button.on('click', function(){
+                        $(this).siblings(":input").val("");
+                        return false;
+                    });;
+                    $button.css({
+                        position: 'absolute',
+                        right: '3px',
+                        border: 'none',
+                        bottom: '0px',
+                        cursor: 'pointer',
+                    });
+                    textInput.append($button);
+                }
+                return textInput;
             },
             colorPicker: function(item) {
                 var container = $('<div class="form-group"/>');
