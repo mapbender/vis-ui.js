@@ -120,6 +120,7 @@ $.fn.formData = (function() {
             input.closest('.form-group').toggleClass('has-error', !isValid);
             if (!isValid && !firstInput) {
                 var $tabElement = input.closest('.ui-tabs');
+                var $panelElement = input.closest('.ui-tabs-panel');
                 var tabIndex = $tabElement.length && $tabElement.find(".ui-tabs-panel").index($panelElement);
                 if ($tabElement) {
                     $tabElement.tabs({active: tabIndex});
