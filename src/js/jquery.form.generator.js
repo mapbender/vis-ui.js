@@ -395,7 +395,7 @@
                     checked: !!item.checked
                 });
 
-                setMandatory(item,inputField);
+                setMandatory(item,input);
 
 
                 container.append(label);
