@@ -744,7 +744,7 @@
                 if (item.allowClear) {
                     var $button = $('<button>X</button>');
                     $button.on('click', function(){
-                        $(this).siblings(":input").val("");
+                        $(this).siblings(":input").val("").trigger("change");
                         return false;
                     });;
                     $button.css({
