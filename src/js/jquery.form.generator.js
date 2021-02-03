@@ -200,6 +200,47 @@
         return dateInput.value !== invalidDate;
     })();
 
+    var setMandatory = function(item,inputField) {
+        if (item.mandatory) {
+            var validationCallback;
+            if (item.mandatory === true) {
+                validationCallback = function (value) {
+                    var isSelectAndEmpty = item.type == "select" && (value === '0' || value === 0) && inputField.find("option:selected").text() == "";
+                    return !!$.trim(value).length && !isSelectAndEmpty;
+                };
+            } else if (typeof item.mandatory === 'string') {
+                // legacy fun fact: string runs through eval, but result of eval can only be used
+                // if it happens to have an method named .exec accepting a single parameter
+                // => this was never compatible with anything but regex literals
+                var rxp = expressionToRegex(item.mandatory);
+                if (rxp) {
+                    validationCallback = function (value) {
+                        return rxp.test(value);
+                    }
+                } else {
+                    var evaluated = eval(item.mandatory);
+                    var isFunction = evaluated instanceof Function;
+                    if (isFunction) {
+                        validationCallback = function (value) {
+                            var isMandatory = evaluated.apply(inputField, []);
+                            return !isMandatory || !!$.trim(value).length;
+                        }
+                    }
+                }
+            }
+            if (!validationCallback) {
+                console.error("Invalid value in item.mandatory. Use boolean true or a regex literal.", item.mandatory, item);
+                throw new Error("Invalid value in item.mandatory. Use boolean true or a regex literal.");
+            }
+            // @todo: why in the world is this a data attribute? Validation belongs in a form submit handler.
+            //        HTML5 validation already does most of this without custom logic
+            inputField.data('warn', validationCallback);
+        }
+        if (item.mandatoryText) {
+            inputField.attr('data-visui-validation-message', item.mandatoryText);
+        }
+    }
+
     // NOTE: bad indents deliberate to minimize diff
     var defaultDeclarations = $.extend({}, readOnlyDeclarations, {
             copyToClipboard: copyToClipboard,
@@ -300,44 +341,7 @@
                     container.append(label);
                 }
 
-                if (item.mandatory) {
-                    var validationCallback;
-                    if (item.mandatory === true) {
-                        validationCallback = function(value) {
-                            var isSelectAndEmpty = item.type == "select" && (value === '0' || value ===  0 ) && inputField.find("option:selected").text() == "";
-                            return !!$.trim(value).length && !isSelectAndEmpty;
-                        };
-                    } else if (typeof item.mandatory === 'string') {
-                        // legacy fun fact: string runs through eval, but result of eval can only be used
-                        // if it happens to have an method named .exec accepting a single parameter
-                        // => this was never compatible with anything but regex literals
-                        var rxp = expressionToRegex(item.mandatory);
-                        if (rxp) {
-                            validationCallback = function(value) {
-                                return rxp.test(value);
-                            }
-                        } else {
-                            var evaluated = eval(item.mandatory);
-                            var isFunction = evaluated instanceof Function;
-                            if (isFunction) {
-                                validationCallback = function(value) {
-                                    var isMandatory = evaluated.apply(inputField, []);
-                                    return !isMandatory || !!$.trim(value).length;
-                                }
-                            }
-                        }
-                    }
-                    if (!validationCallback) {
-                        console.error("Invalid value in item.mandatory. Use boolean true or a regex literal.", item.mandatory, item);
-                        throw new Error("Invalid value in item.mandatory. Use boolean true or a regex literal.");
-                    }
-                    // @todo: why in the world is this a data attribute? Validation belongs in a form submit handler.
-                    //        HTML5 validation already does most of this without custom logic
-                    inputField.data('warn', validationCallback);
-                }
-                if (item.mandatoryText) {
-                    inputField.attr('data-visui-validation-message', item.mandatoryText);
-                }
+                setMandatory(item,inputField);
 
                 if (label && item.copyClipboard) {
                     label.append('&nbsp;', $('<i/>')
@@ -387,9 +391,12 @@
                     value: item.value || null
                 });
                 input.prop({
-                    required: !!item.mandatory,
+                    //required: !!item.mandatory, /** disabled because setMandatory deals with mandatoryness **/
                     checked: !!item.checked
                 });
+
+                setMandatory(item,inputField);
+
 
                 container.append(label);
 
