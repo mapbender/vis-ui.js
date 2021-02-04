@@ -200,6 +200,24 @@
         return dateInput.value !== invalidDate;
     })();
 
+    var setAllowClear = function(item,container) {
+        if (item.allowClear) {
+            var $button = $('<button>X</button>');
+            $button.on('click', function(){
+                $(this).siblings(":input").val("");
+                return false;
+            });
+            $button.css({
+                position: 'absolute',
+                right: '3px',
+                border: 'none',
+                bottom: '0px',
+                cursor: 'pointer',
+            });
+            container.append($button);
+        }
+    }
+
     var setMandatory = function(item,inputField) {
         if (item.mandatory) {
             var validationCallback;
@@ -342,6 +360,8 @@
                 }
 
                 setMandatory(item,inputField);
+
+                setAllowClear(item,container);
 
                 if (label && item.copyClipboard) {
                     label.append('&nbsp;', $('<i/>')
@@ -740,21 +760,6 @@
                         value: value
                     }));
                     textInput.dateSelector();
-                }
-                if (item.allowClear) {
-                    var $button = $('<button>X</button>');
-                    $button.on('click', function(){
-                        $(this).siblings(":input").val("").trigger("change");
-                        return false;
-                    });;
-                    $button.css({
-                        position: 'absolute',
-                        right: '3px',
-                        border: 'none',
-                        bottom: '0px',
-                        cursor: 'pointer',
-                    });
-                    textInput.append($button);
                 }
                 return textInput;
             },
