@@ -200,6 +200,33 @@
         return dateInput.value !== invalidDate;
     })();
 
+    var setAfterChange = function(item,input) {
+        if (has(item, 'afterChange') && item.afterChange) {
+
+            var changeBackgroundColor = function(item,input) {
+                var backgroundColor = item.afterChange["background-color"];
+                if (backgroundColor) {
+                    input.css("background-color", backgroundColor);
+                    if (input.data("select2")) {
+                        input.data("select2").$selection.css("background-color", backgroundColor);
+                    }
+                }
+            }
+            input.on("change",function(event,options) {
+                changeBackgroundColor(item,input);
+            });
+
+            if (item.type == "select" && (item.multiple || item.select2) && (typeof input.select2 === 'function')) {
+                input.on("select2:unselecting", function(e) {
+                    changeBackgroundColor(item,input);
+                });
+            }
+
+
+        }
+
+    }
+
     var setAllowClear = function(item,container) {
         if (item.allowClear) {
             var $button = $('<button>X</button>');
@@ -362,6 +389,8 @@
                 setMandatory(item,inputField);
 
                 setAllowClear(item,container);
+
+                setAfterChange(item,inputField);
 
                 if (label && item.copyClipboard) {
                     label.append('&nbsp;', $('<i/>')
