@@ -229,17 +229,26 @@
 
     var setAllowClear = function(item,container) {
         if (item.allowClear) {
-            var $button = $('<button>X</button>');
+            var $button = $('<span>×</span>');
             $button.on('click', function(){
                 $(this).siblings(":input").val("");
+                $(this).hide();
                 return false;
             });
             $button.css({
                 position: 'absolute',
-                right: '3px',
+                right: '15px',
                 border: 'none',
-                bottom: '0px',
+                bottom: '5px',
                 cursor: 'pointer',
+                display: 'none'
+            });
+            container.on("change",function(event) {
+                if($(event.target).val()) {
+                    $button.show();
+                } else {
+                    $button.hide();
+                }
             });
             container.append($button);
         }
