@@ -227,11 +227,12 @@
 
     }
 
-    var setAllowClear = function(item,container) {
+    var setAllowClear = function(item,container,inputField) {
+
         if (item.allowClear) {
             var $button = $('<span>×</span>');
             $button.on('click', function(){
-                $(this).siblings(":input").val("");
+                inputField.val("").trigger("change");
                 $(this).hide();
                 return false;
             });
@@ -243,7 +244,7 @@
                 cursor: 'pointer',
                 display: 'none'
             });
-            container.on("change",function(event) {
+            inputField.on("change filled",function(event) {
                 if($(event.target).val()) {
                     $button.show();
                 } else {
