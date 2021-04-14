@@ -398,7 +398,7 @@
 
                 setMandatory(item,inputField);
 
-                setAllowClear(item,container);
+                setAllowClear(item,container,inputField);
 
                 setAfterChange(item,inputField);
 
