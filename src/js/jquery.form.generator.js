@@ -784,7 +784,8 @@
                     }
                 }
                 if (item.mandatory && !value) {
-                    value = (new Date()).toISOString().slice(0, 10);
+                    value = '';
+                    //value = (new Date()).toISOString().slice(0, 10);
                 }
 
                 var textInput;
